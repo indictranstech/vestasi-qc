@@ -1,4 +1,4 @@
-# Copyright (c) 2013, New Indictrans Technologies and contributors
+	# Copyright (c) 2013, New Indictrans Technologies and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -88,8 +88,33 @@ class QualityChecking(Document):
 		for data in self.get('qc_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` where status='Available' and name between '%s' and '%s' """%(data.serial_from,data.serial_to),as_list=1)
 			for serial in serials:
-				serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='%s',grade='%s' where name='%s'"""%(data.result,data.grade,serial[0]))
+				self.change_status(serial,data)
+				self.set_values(serial,data)
 				to_do=frappe.db.sql("""update `tabToDo` set status='Closed' where serial_no='%s'"""%(serial[0]))
+
+
+	def change_status(self,serial,data):
+		serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='%s',grade='%s' where name='%s'"""%(data.result,data.grade,serial[0]))
+
+	def set_values(self,serial,data):
+
+		sn=frappe.get_doc("Serial No",serial[0])
+		qp=sn.append("quality_parameters",
+			{	"fe":data.fe,
+				"ca":data.ca,
+				"al":data.al,
+				"c":data.c,
+				"alpha":data.alpha,
+				"d10":data.d10,
+				"d50":data.d50,
+				"mesh_625":data.mesh_625,
+				"d90":data.d90,
+				"SSA":data.ssa,
+				"O2":data.o2
+			})
+		sn.save(ignore_permissions=True)
+
+
 
 	
 	def change_qcstatus_on_cancel(self):
@@ -98,4 +123,6 @@ class QualityChecking(Document):
 			for serial in serials:
 				serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='',grade='' where name='%s'"""%(serial[0]))
 				to_do=frappe.db.sql("""update `tabToDo` set status='Open' where serial_no='%s'"""%(serial[0]))
+				frappe.db.sql("""delete from `tabQuality Paramter Values` where parent='%s'"""%(serial[0]))
+				
  
