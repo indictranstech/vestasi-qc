@@ -11,6 +11,7 @@ from frappe.utils import cstr, flt, getdate, comma_and,cint
 class QualityChecking(Document):
 	def validate(self):
                 self.validate_serial()
+               
                 
 
 	def validate_serial(self):
@@ -85,19 +86,58 @@ class QualityChecking(Document):
     
 	
 	def change_qcstatus(self):
+		serials_qc_dic={}
+		parameters=["fe","ca","al","c","alpha","d10","d50","mesh_625","d90","ssa","o2","free_si"]
 		for data in self.get('qc_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` where status='Available' and name between '%s' and '%s' """%(data.serial_from,data.serial_to),as_list=1)
 			for serial in serials:
 				self.change_status(serial,data)
-				self.set_values(serial,data)
+				#self.set_values(serial,data)
+				self.set_values_to_dic(serial,data,serials_qc_dic,parameters)
 				to_do=frappe.db.sql("""update `tabToDo` set status='Closed' where serial_no='%s'"""%(serial[0]))
-
+		self.set_values_in_serial_qc(serials_qc_dic,parameters)
 
 	def change_status(self,serial,data):
 		serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='%s',grade='%s' where name='%s'"""%(data.result,data.grade,serial[0]))
 
-	def set_values(self,serial,data):
+	def set_values_to_dic(self,sr_no,data_row,serials_qc_dic,parameters):
+		if not sr_no[0] in serials_qc_dic.keys():
+			pram_dic={}
+			for parameter in parameters:
+				if data_row.get(parameter):
+					pram_dic.setdefault(parameter,data_row.get(parameter))
+				else:
+					pram_dic.setdefault(parameter,"")
+			serials_qc_dic.setdefault(sr_no[0],pram_dic)
+		else:
+			pram_dic=serials_qc_dic.get(sr_no[0])
+			for parameter in parameters:
+				if data_row.get(parameter):
+					pram_dic[parameter]=data_row.get(parameter)
+			serials_qc_dic[sr_no[0]]=pram_dic
+		return serials_qc_dic
 
+	def set_values_in_serial_qc(self,serials_qc_dic,parameters):
+			for key in serials_qc_dic:
+				pram_dic=serials_qc_dic.get(key)
+				sn=frappe.get_doc("Serial No",key)
+				qp=sn.append("quality_parameters",{})
+				qp.fe=pram_dic.get('fe')
+				qp.ca=pram_dic.get('ca')
+				qp.al=pram_dic.get('al')
+				qp.c=pram_dic.get('c')
+				qp.alpha=pram_dic.get('alpha')
+				qp.d10=pram_dic.get('d10')
+				qp.d50=pram_dic.get('d50')
+				qp.d90=pram_dic.get('d90')
+				qp.ssa=pram_dic.get('ssa')
+				qp.o2=pram_dic.get('o2')
+				qp.mesh_625=pram_dic.get('mesh_625')
+				qp.free_si=pram_dic.get('free_si')
+				sn.save(ignore_permissions=True)
+
+
+	def set_values(self,serial,data):
 		sn=frappe.get_doc("Serial No",serial[0])
 		qp=sn.append("quality_parameters",
 			{	"fe":data.fe,
@@ -109,8 +149,9 @@ class QualityChecking(Document):
 				"d50":data.d50,
 				"mesh_625":data.mesh_625,
 				"d90":data.d90,
-				"SSA":data.ssa,
-				"O2":data.o2
+				"ssa":data.ssa,
+				"o2":data.o2,
+				"free_si":data.free_si
 			})
 		sn.save(ignore_permissions=True)
 

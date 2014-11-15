@@ -189,6 +189,22 @@
    "precision": ""
   }, 
   {
+   "fieldname": "grade", 
+   "fieldtype": "Data", 
+   "label": "Grade", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
+  }, 
+  {
+   "fieldname": "gategory", 
+   "fieldtype": "Data", 
+   "label": "Gategory", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
+  }, 
+  {
    "fieldname": "operator_name", 
    "fieldtype": "Read Only", 
    "hidden": 0, 
@@ -274,7 +290,7 @@
  "is_submittable": 1, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-10-01 02:02:44.215572", 
+ "modified": "2014-11-13 13:22:41.495950", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Quality Analysis", 
