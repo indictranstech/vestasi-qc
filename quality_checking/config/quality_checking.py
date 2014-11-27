@@ -9,8 +9,22 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Quality Checking",
-					"description": _("Quality Control "),
-					"label":"Quality Control"
+					"description": _("Chemical Analysis"),
+					"label":"Chemical Analysis"
+
+				},
+				{
+					"type": "doctype",
+					"name": "PSD Analysis",
+					"description": _("Particle Size Analysis"),
+					"label":"PSD Analysis"
+
+				},
+				{
+					"type": "doctype",
+					"name": "Surface  Area Analysis",
+					"description": _("Surface Area Analysis"),
+					"label":"SSA Analysis"
 
 				},
 				{

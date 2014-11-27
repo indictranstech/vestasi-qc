@@ -11,8 +11,7 @@ from frappe.utils import cstr, flt, getdate, comma_and,cint
 class QualityChecking(Document):
 	def validate(self):
                 self.validate_serial()
-               
-                
+                #self.change_qcstatus()
 
 	def validate_serial(self):
         	sample_serial_no_list=[]
@@ -26,15 +25,19 @@ class QualityChecking(Document):
 	def qc_result(self,serial_no):
         	parameters=self.get_parameteres()
       		result=self.get_result(parameters,serial_no)
-       		#self.get_grade(parameters,serial_no)
        		return "Done"
 	
 	def get_parameteres(self):
 		if self.item_code:
-                	return frappe.db.sql("select a.specification,a.min_value,a.max_value,a.hp,a.p,a.s from `tabItem Quality Inspection Parameter` as a , tabItem as b where a.mandatory='Yes' and a.parent=b.name and b.name='%s'"%(self.item_code),as_list=1)
+                	return frappe.db.sql("""select a.specification,a.min_value,a.max_value 
+                		from `tabItem Quality Inspection Parameter` as a , 
+                		tabItem as b where a.mandatory='Yes'
+                		 and a.parent=b.name 
+                		 and b.name='%s'
+                		 and a.specification in ('Fe','Ca','Al','C','O2','Free Si','Alpha')"""%(self.item_code),as_list=1)
 
 	def get_result(self,parameters,serial_no):
-   		icon_mapper={'Rejected':'icon-remove','Accepted':'icon-ok'}
+		icon_mapper={'Rejected':'icon-remove','Accepted':'icon-ok'}
 		
         	for d in self.get('qc_serial'):
             		for data in parameters:
@@ -43,7 +46,7 @@ class QualityChecking(Document):
                     			fieldname=frappe.db.sql("select fieldname from tabDocField where label='%s'"%(data[0]),as_list=1)
                     			if fieldname:
                         			if (data[1] and data[2]) and (flt(d.get(fieldname[0][0])) >= flt(data[1]) and flt(d.get(fieldname[0][0])) <= flt(data[2])):
-							d.result='Accepted'
+										d.result='Accepted'
                              
                         			elif not data[2] and (flt(d.get(fieldname[0][0])) >= flt(data[1])):                                                
                            				d.result='Accepted'                  
@@ -52,7 +55,7 @@ class QualityChecking(Document):
                             				d.result='Accepted'                         
                         
                         			else:
-                            				d.result='Rejected'
+                        				d.result='Rejected'
                             				d.result_status='<icon class="icon-remove"></icon>'
 							d.grade = self.get_rejected_grade(d)
                            				break
@@ -65,16 +68,13 @@ class QualityChecking(Document):
 
 	def get_rejected_grade(self, args):
 		if args.sample_serial_no:
-			series = frappe.db.get_value('Serial No',args.sample_serial_no,'naming_series')
-			return series + ' - R' 
+			return 'R' 
 
 	
 	def on_submit(self):
         	self.validate_qc_status()
         	self.change_qcstatus()
 
-
-	
 	def on_cancel(self):
     		self.change_qcstatus_on_cancel()
 
@@ -87,82 +87,73 @@ class QualityChecking(Document):
 	
 	def change_qcstatus(self):
 		serials_qc_dic={}
-		parameters=["fe","ca","al","c","alpha","d10","d50","mesh_625","d90","ssa","o2","free_si"]
 		for data in self.get('qc_serial'):
-			serials=frappe.db.sql("""select name from `tabSerial No` where status='Available' and name between '%s' and '%s' """%(data.serial_from,data.serial_to),as_list=1)
+			serials=frappe.db.sql("""select name from `tabSerial No` 
+				where status='Available' 
+				and name between '%s' and '%s' """%(data.serial_from,data.serial_to),as_list=1)
 			for serial in serials:
-				self.change_status(serial,data)
-				#self.set_values(serial,data)
-				self.set_values_to_dic(serial,data,serials_qc_dic,parameters)
+				self.set_values_in_serial_qc(serial[0],data)
+				grade=self.get_grade(serial[0],data)
+				self.change_status(serial,data,grade)
 				to_do=frappe.db.sql("""update `tabToDo` set status='Closed' where serial_no='%s'"""%(serial[0]))
-		self.set_values_in_serial_qc(serials_qc_dic,parameters)
+				
+	def get_grade(self,serial,data):
+		sn=frappe.get_doc("Serial No",serial)
+		psd_grade=sn.psd_grade
+		sa_grade=sn.sa_grade
+		if not psd_grade and not sa_grade:
+			sn.grade=data.grade
+		elif psd_grade=='R' and sa_grade=='R':
+			sn.grade='R'
+		elif psd_grade=='R' and sa_grade!='R':
+			sn.grade='R '+cstr(sa_grade)
+		elif data.grade=='R' and sa_grade=='R':
+			sn.grade='R'
+		elif data.grade!='R' and psd_grade!='R' and sa_grade=='R':
+			sn.grade=cstr(data.grade)+' R'
+		elif data.grade!='R' and psd_grade!='R' and sa_grade!='R':
+			sn.grade=' R'
+		elif data.grade=='R' and psd_grade=='R' and sa_grade!='R':
+			sn.grade='R '+cstr(sa_grade)
+		return sn.grade
 
-	def change_status(self,serial,data):
-		serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='%s',grade='%s' where name='%s'"""%(data.result,data.grade,serial[0]))
+	def change_status(self,serial,data,grade):
+		serial_numbers=frappe.db.sql("""update `tabSerial No` 
+			set qc_status='%s',grade='%s',qc_grade='%s'
+			where name='%s'"""%(data.result,grade,data.grade,serial[0]))
 
-	def set_values_to_dic(self,sr_no,data_row,serials_qc_dic,parameters):
-		if not sr_no[0] in serials_qc_dic.keys():
-			pram_dic={}
-			for parameter in parameters:
-				if data_row.get(parameter):
-					pram_dic.setdefault(parameter,data_row.get(parameter))
-				else:
-					pram_dic.setdefault(parameter,"")
-			serials_qc_dic.setdefault(sr_no[0],pram_dic)
-		else:
-			pram_dic=serials_qc_dic.get(sr_no[0])
-			for parameter in parameters:
-				if data_row.get(parameter):
-					pram_dic[parameter]=data_row.get(parameter)
-			serials_qc_dic[sr_no[0]]=pram_dic
-		return serials_qc_dic
 
-	def set_values_in_serial_qc(self,serials_qc_dic,parameters):
-			for key in serials_qc_dic:
-				pram_dic=serials_qc_dic.get(key)
-				sn=frappe.get_doc("Serial No",key)
+	def set_values_in_serial_qc(self,serial,data):
+			sn=frappe.get_doc("Serial No",serial)
+			cl=sn.get('quality_parameters')
+			temp=0
+			if cl:
+				for d in cl:
+					if temp==0:
+						d.fe=data.fe
+						d.ca=data.ca
+						d.al=data.al
+						d.c=data.c
+						d.alpha=data.alpha
+						d.o2=data.o2
+						d.free_si=data.free_si
+						sn.save(ignore_permissions=True)
+			else:
 				qp=sn.append("quality_parameters",{})
-				qp.fe=pram_dic.get('fe')
-				qp.ca=pram_dic.get('ca')
-				qp.al=pram_dic.get('al')
-				qp.c=pram_dic.get('c')
-				qp.alpha=pram_dic.get('alpha')
-				qp.d10=pram_dic.get('d10')
-				qp.d50=pram_dic.get('d50')
-				qp.d90=pram_dic.get('d90')
-				qp.ssa=pram_dic.get('ssa')
-				qp.o2=pram_dic.get('o2')
-				qp.mesh_625=pram_dic.get('mesh_625')
-				qp.free_si=pram_dic.get('free_si')
+				qp.fe=data.fe
+				qp.ca=data.ca
+				qp.al=data.al
+				qp.c=data.c
+				qp.alpha=data.alpha
+				qp.o2=data.o2
+				qp.free_si=data.free_si
 				sn.save(ignore_permissions=True)
 
-
-	def set_values(self,serial,data):
-		sn=frappe.get_doc("Serial No",serial[0])
-		qp=sn.append("quality_parameters",
-			{	"fe":data.fe,
-				"ca":data.ca,
-				"al":data.al,
-				"c":data.c,
-				"alpha":data.alpha,
-				"d10":data.d10,
-				"d50":data.d50,
-				"mesh_625":data.mesh_625,
-				"d90":data.d90,
-				"ssa":data.ssa,
-				"o2":data.o2,
-				"free_si":data.free_si
-			})
-		sn.save(ignore_permissions=True)
-
-
-
-	
 	def change_qcstatus_on_cancel(self):
 		for data in self.get('qc_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` where status='Available' and name between '%s' and '%s' """%(data.serial_from,data.serial_to),as_list=1)
 			for serial in serials:
-				serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='',grade='' where name='%s'"""%(serial[0]))
+				serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='',qc_grade='' where name='%s'"""%(serial[0]))
 				to_do=frappe.db.sql("""update `tabToDo` set status='Open' where serial_no='%s'"""%(serial[0]))
 				frappe.db.sql("""delete from `tabQuality Paramter Values` where parent='%s'"""%(serial[0]))
 				
