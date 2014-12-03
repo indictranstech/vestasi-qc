@@ -37,7 +37,6 @@ class SurfaceAreaAnalysis(Document):
 				in ('SSA')"""%(self.item_code),as_list=1)
 
 	def get_result(self,parameters,serial_no):
-		frappe.errprint("in the get result")
 		icon_mapper={'Rejected':'icon-remove','Accepted':'icon-ok'}
 		for d in self.get('sa_serial'):
 			frappe.errprint("in the get result")
@@ -57,40 +56,6 @@ class SurfaceAreaAnalysis(Document):
 					d.result='Rejected'
 				if d.result=='Accepted':
 					d.result_status='<icon class="icon-ok"></icon>'
-
-
-			# return grade
-			# 		fieldname=frappe.db.sql("""select fieldname 
-			# 			from tabDocField where label='%s'"""%(data[0]),as_list=1)
-			# 		if fieldname:
-			# 			if (data[1] and data[2]) and (flt(d.get(fieldname[0][0])) >= flt(data[1]) and flt(d.get(fieldname[0][0])) <= flt(data[2])):
-			# 				d.result='Accepted'
-			# 			elif not data[2] and (flt(d.get(fieldname[0][0])) >= flt(data[1])):                                                
-			# 				d.result='Accepted'
-			# 			elif not data[1] and (flt(d.get(fieldname[0][0])) <= flt(data[2])):
-			# 				d.result='Accepted'
-			# 			else:
-			# 				d.result='Rejected'
-			# 				d.result_status='<icon class="icon-remove"></icon>'
-			# 				d.grade = 'R'
-			# 				break
-			# 			if(d.result=='Accepted'):
-			# 				d.grade = self.get_grade(d.ssa,d.serial_no)
-			# 				d.result_status='<icon class="icon-ok"></icon>'
-			# return d.result
-
-	def get_grade(self,ssa,serial_no):
-		grade=''
-		if ssa >= 6 and ssa <=7.99:
-			grade='L'
-		elif ssa >= 8 and ssa <=9.99:
-			grade='M'
-		elif ssa <= 10:
-			grade='H'
-		else:
-			grade='R'
-		return grade
-
 
 
 	def on_submit(self):
