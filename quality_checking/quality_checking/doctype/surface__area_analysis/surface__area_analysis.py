@@ -39,7 +39,6 @@ class SurfaceAreaAnalysis(Document):
 	def get_result(self,parameters,serial_no):
 		icon_mapper={'Rejected':'icon-remove','Accepted':'icon-ok'}
 		for d in self.get('sa_serial'):
-			frappe.errprint("in the get result")
 			if cstr(d.serial_no)==cstr(serial_no):
 				d.grade=''
 				if cint(d.ssa)>= 6 and cint(d.ssa)<=7.99:
