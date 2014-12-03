@@ -56,6 +56,9 @@ class SurfaceAreaAnalysis(Document):
 					d.result='Rejected'
 				if d.result=='Accepted':
 					d.result_status='<icon class="icon-ok"></icon>'
+				else:
+					d.result_status='<icon class="icon-remove"></icon>'
+						
 
 
 	def on_submit(self):
