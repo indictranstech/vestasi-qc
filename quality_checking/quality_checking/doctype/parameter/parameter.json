@@ -26,6 +26,13 @@
    "reqd": 0, 
    "search_index": 0, 
    "set_only_once": 0
+  }, 
+  {
+   "fieldname": "wieghtage", 
+   "fieldtype": "Data", 
+   "label": "wieghtage", 
+   "permlevel": 0, 
+   "precision": ""
   }
  ], 
  "hide_heading": 0, 
@@ -36,7 +43,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-08-29 10:38:08.086892", 
+ "modified": "2015-06-12 14:52:13.180463", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Parameter", 

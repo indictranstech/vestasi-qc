@@ -35,7 +35,7 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Parameter",
-					"description": _("Parameter"),
+					"description": _("Parameter")
 				},
 				{
 					"type": "doctype",
@@ -50,10 +50,11 @@ def get_data():
 			"icon": "icon-table",
 			"items": [
 				{
-					"is_query_report": False,
+					"type":"report",
+					"is_query_report":True,
 					"name": "Flowbin Details",
-					"doctype": "Quality Checking",
-					"icon": "icon-bar-chart",
+					"doctype": "Stock Entry",
+					"icon": "icon-bar-chart"
 				},
 			]
 		},

@@ -38,12 +38,15 @@ class QualityChecking(Document):
 
 	def get_result(self,parameters,serial_no):
 		icon_mapper={'Rejected':'icon-remove','Accepted':'icon-ok'}
-		
+
         	for d in self.get('qc_serial'):
+					
             		for data in parameters:
-			
-                		if d.sample_serial_no==serial_no:
+					
+                		if cstr(d.sample_serial_no)==cstr(serial_no):
+					
                     			fieldname=frappe.db.sql("select fieldname from tabDocField where label='%s'"%(data[0]),as_list=1)
+					
                     			if fieldname:
                         			if (data[1] and data[2]) and (flt(d.get(fieldname[0][0])) >= flt(data[1]) and flt(d.get(fieldname[0][0])) <= flt(data[2])):
 										d.result='Accepted'
