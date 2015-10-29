@@ -144,7 +144,8 @@
    "label": "Quality Analysis", 
    "options": "QA Serial", 
    "permlevel": 0, 
-   "precision": ""
+   "precision": "", 
+   "read_only": 1
   }, 
   {
    "fieldname": "view_details", 
@@ -198,11 +199,12 @@
   }, 
   {
    "fieldname": "gategory", 
-   "fieldtype": "Data", 
-   "label": "Gategory", 
+   "fieldtype": "Read Only", 
+   "label": "Category", 
+   "options": "item_code.category", 
    "permlevel": 0, 
    "precision": "", 
-   "read_only": 1
+   "read_only": 0
   }, 
   {
    "fieldname": "operator_name", 
@@ -290,7 +292,7 @@
  "is_submittable": 1, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-11-13 13:22:41.495950", 
+ "modified": "2015-10-28 14:52:50.302540", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Quality Analysis", 

@@ -6,6 +6,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cstr, flt, getdate, comma_and,cint
 import re
+from erpnext.stock.custom_methods import update_serialNo_grade
 
 class PSDAnalysis(Document):
 	
@@ -86,39 +87,40 @@ class PSDAnalysis(Document):
 		parameters=["d10","d50","d90","mesh_625"]
 		for data in self.get('psd_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` 
-				where status='Available' 
+				where status='Available' and item_code = '%s'
 				and name between '%s' 
-				and '%s' """%(data.serial_from,data.serial_to),as_list=1)
+				and '%s' """%(self.item_code, data.serial_from,data.serial_to),as_list=1)
 			for serial in serials:
 				self.set_values_in_serial_qc(serial[0],data)
-				grade=self.get_grade(serial[0],data)
-				self.change_status(serial,data,grade)
+				# grade=self.get_grade(serial[0],data)
+				self.change_status(serial,data)
+				update_serialNo_grade(serial[0])
 				to_do=frappe.db.sql("""update `tabToDo` set status='Closed' where serial_no='%s'"""%(serial[0]))
 				
-	def get_grade(self,serial,data):
-		sn=frappe.get_doc("Serial No",serial)
-		qc_grade=sn.qc_grade
-		sa_grade=sn.sa_grade
-		if not qc_grade and not sa_grade:
-			sn.grade=data.grade
-		elif qc_grade=='R' and sa_grade=='R':
-			sn.grade='R'
-		elif qc_grade=='R' and sa_grade!='R':
-			sn.grade='R '+cstr(sa_grade)
-		elif data.grade=='R' and sa_grade=='R':
-			sn.grade='R'
-		elif data.grade!='R' and qc_grade!='R' and sa_grade=='R':
-			sn.grade=cstr(data.grade)+' R'
-		elif data.grade!='R' and qc_grade!='R' and sa_grade!='R':
-			sn.grade=cstr(data.grade)+cstr(sa_grade)
-		elif data.grade=='R' and qc_grade=='R' and sa_grade!='R':
-			sn.grade='R '+cstr(sa_grade)
-		return sn.grade
+	# def get_grade(self,serial,data):
+	# 	sn=frappe.get_doc("Serial No",serial)
+	# 	qc_grade=sn.qc_grade
+	# 	sa_grade=sn.sa_grade
+	# 	if not qc_grade and not sa_grade:
+	# 		sn.grade=data.grade
+	# 	elif qc_grade=='R' and sa_grade=='R':
+	# 		sn.grade='R'
+	# 	elif qc_grade=='R' and sa_grade!='R':
+	# 		sn.grade='R '+cstr(sa_grade)
+	# 	elif data.grade=='R' and sa_grade=='R':
+	# 		sn.grade='R'
+	# 	elif data.grade!='R' and qc_grade!='R' and sa_grade=='R':
+	# 		sn.grade=cstr(data.grade)+' R'
+	# 	elif data.grade!='R' and qc_grade!='R' and sa_grade!='R':
+	# 		sn.grade=cstr(data.grade)+cstr(sa_grade)
+	# 	elif data.grade=='R' and qc_grade=='R' and sa_grade!='R':
+	# 		sn.grade='R '+cstr(sa_grade)
+	# 	return sn.grade
 
-	def change_status(self,serial,data,grade):
+	def change_status(self,serial,data):
 		serial_numbers=frappe.db.sql("""update `tabSerial No` 
-			set psd_status='%s',grade='%s',psd_grade='%s' 
-			where name='%s'"""%(data.result,grade,data.grade,serial[0]))
+			set psd_status='%s',psd_grade='%s' 
+			where name='%s'"""%(data.result,data.grade,serial[0]))
 
 	def set_values_in_serial_qc(self,serial,data):
 		sn=frappe.get_doc("Serial No",serial)
@@ -141,15 +143,15 @@ class PSDAnalysis(Document):
 			sn.save(ignore_permissions=True)
 
 	def change_qcstatus_on_cancel(self):
-		for data in self.get('qc_serial'):
+		for data in self.get('psd_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` 
-				where status='Available' 
+				where status='Available' and item_code = '%s'
 				and name between '%s' 
-				and '%s' """%(data.serial_from,data.serial_to),as_list=1)
+				and '%s' """%(self.item_code, data.serial_from,data.serial_to),as_list=1)
 			for serial in serials:
 				serial_numbers=frappe.db.sql("""update `tabSerial No` 
-					set psd_status='',psd_grade='' 
-					where name='%s'"""%(serial[0]))
+					set psd_status='',psd_grade=''
+					where name='%s'"""%( serial[0]))
 				to_do=frappe.db.sql("""update `tabToDo` 
 					set status='Open' 
 					where serial_no='%s'"""%(serial[0]))

@@ -6,6 +6,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cstr, flt, getdate, comma_and,cint
 import re
+from erpnext.stock.custom_methods import update_serialNo_grade
 
 class SurfaceAreaAnalysis(Document):
 
@@ -79,8 +80,9 @@ class SurfaceAreaAnalysis(Document):
 		parameters=["ssa"]
 		for data in self.get('sa_serial'):
 			self.set_values_in_serial_qc(data,parameters)
-			grade=self.get_grade_serial(data.serial_no,data)
-			self.change_status(data.serial_no,data,grade)
+			# grade=self.get_grade_serial(data.serial_no,data)
+			self.change_status(data.serial_no,data)
+			update_serialNo_grade(data.serial_no)
 			to_do=frappe.db.sql("""update `tabToDo` set 
 				status='Closed' where serial_no='%s'"""%(data.serial_no))
 
@@ -93,14 +95,14 @@ class SurfaceAreaAnalysis(Document):
 		elif qc_grade=='R' or psd_grade=='R' and data.grade and data.grade=='R':
 			sn.grade='R'
 		elif qc_grade!='R' or psd_grade!='R' and data.grade and data.grade!='R':
-			sn.grade=qc_grade or psd_grade + data.grade
+			sn.grade=qc_grade or psd_grade + data.grade #issue
 		return sn.grade
 
 			
-	def change_status(self,serial,data,grade):
+	def change_status(self,serial,data):
 		serial_numbers=frappe.db.sql("""update `tabSerial No` 
-			set sa_analysis='%s',grade='%s',sa_grade='%s' 
-			where name='%s'"""%(data.result,grade,data.grade,serial))
+			set sa_analysis='%s',sa_grade='%s' 
+			where name='%s'"""%(data.result,data.grade,serial))
 
 	
 	def set_values_in_serial_qc(self,data,parameters):
@@ -123,12 +125,12 @@ class SurfaceAreaAnalysis(Document):
 		for data in self.get('sa_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` 
 				where status='Available' 
-				and name between '%s' 
-				and '%s' """%(data.serial_from,data.serial_to),as_list=1)
+				and name = '%s' """%(data.serial_no),as_list=1)
 			for serial in serials:
 				serial_numbers=frappe.db.sql("""update `tabSerial No` 
 					set sa_analysis='',sa_grade='' 
 					where name='%s'"""%(serial[0]))
+				update_serialNo_grade(serial[0])
 				to_do=frappe.db.sql("""update `tabToDo` 
 					set status='Open' 
 					where serial_no='%s'"""%(serial[0]))
