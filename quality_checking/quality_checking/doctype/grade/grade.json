@@ -1,7 +1,7 @@
 {
  "allow_copy": 0, 
  "allow_import": 0, 
- "allow_rename": 0, 
+ "allow_rename": 1, 
  "autoname": "field:grade", 
  "creation": "2014-08-28 02:39:17.488455", 
  "custom": 0, 
@@ -36,7 +36,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-08-28 06:32:29.936012", 
+ "modified": "2015-11-03 14:21:58.476056", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Grade", 
