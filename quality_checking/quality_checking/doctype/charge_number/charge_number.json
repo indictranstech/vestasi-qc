@@ -120,7 +120,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-11-05 19:18:53.359017", 
+ "modified": "2015-11-08 19:08:15.511623", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Charge Number", 
@@ -161,6 +161,14 @@
    "role": "Administrator", 
    "set_user_permissions": 0, 
    "submit": 0, 
+   "write": 1
+  }, 
+  {
+   "create": 1, 
+   "delete": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "All", 
    "write": 1
   }
  ], 

@@ -34,6 +34,12 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"name": "Charge Number",
+					"icon": "icon-suitcase",
+					"description": _("Charge number details"),
+				},
+				{
+					"type": "doctype",
 					"name": "Parameter",
 					"description": _("Parameter")
 				},
