@@ -6,6 +6,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cstr
 import os, json
+from frappe import _, msgprint, throw
 
 class QualityAnalysis(Document):
 
@@ -136,9 +137,12 @@ class QualityAnalysis(Document):
         def before_submit(self):
                 drum_list = ''
                 for data in self.qa_serial:
-                        if data.serial_no:
-                                self.update_serial_status(data.serial_no, 'Completed')
-                                drum_list += data.serial_no + '\n'
+                        if data.serial_no: 
+                                if frappe.db.get_value('Serial No', data.serial_no, 'qc_certificate') != 'Completed':
+                                        self.update_serial_status(data.serial_no, 'Completed')
+                                        drum_list += data.serial_no + '\n'
+                                else:
+                                        frappe.throw(_("The serial no {0} has been already certified").format(data.serial_no))
                 self.drum_list = drum_list
 
         def before_cancel(self):
