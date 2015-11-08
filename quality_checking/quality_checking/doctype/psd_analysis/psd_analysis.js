@@ -33,9 +33,9 @@ cur_frm.fields_dict.psd_serial.grid.get_field("sample_serial_no").get_query = fu
 
 cur_frm.cscript.calculate=function(doc,cdt,cdn){
         var d=locals[cdt][cdn]       
-        get_server_fields('qc_result',d.sample_serial_no,'',doc,cdt,cdn,1,function(r){
-     
-                refresh_field('psd_serial')
+        get_server_fields('qc_result',d,'',doc,cdt,cdn,1,function(r){
+     		refresh_field('grade', d.name, 'psd_serial')	
+     		refresh_field('result', d.name, 'psd_serial')	
         })
 }
 

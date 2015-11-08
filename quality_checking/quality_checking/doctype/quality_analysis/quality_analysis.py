@@ -10,7 +10,8 @@ import os, json
 class QualityAnalysis(Document):
 
 	def validate(self):
-		self.set_mandatory_fields()
+		# self.set_mandatory_fields()
+                self.set_grade()
 
         def set_mandatory_fields(self):
                 fields=self.get_mandatory_fields()
@@ -25,6 +26,10 @@ class QualityAnalysis(Document):
                         temp_len += 1
 
                 self.mandatory_fields=fields_to_print
+
+        def set_grade(self):
+                if self.serial_from:
+                        self.grade = frappe.db.get_value('Serial No', self.serial_from, 'grade')
 
         def get_field_names(self,fields):
                 field_names=[]
@@ -53,16 +58,43 @@ class QualityAnalysis(Document):
                         self.validate_serial(serial[0])
                         self.append_to_child(serial[0])
                 if self.series:
-                        self.series += cstr(self.serial_from)+'-'+cstr(self.serial_to)+','
+                        self.series = cstr(self.series)+','+cstr(self.serial_from)
                 else:
-                        self.series = cstr(self.serial_from)+'-'+cstr(self.serial_to)+','
+                        self.series = cstr(self.serial_from)
+                self.set_mandatory_field()
                 return "done"
 
         def get_serials_details(self):
                 serials=frappe.db.sql("""select name from `tabSerial No` 
                         where name between '%s' and 
-                        '%s' """%(self.serial_from,self.serial_to),as_list=1)
+                        '%s' and item_code = '%s' and ifnull(qty,0) > 0 and ifnull(qc_certificate, 'Not Completed')='Not Completed'"""%(self.serial_from,self.serial_to, self.item_code),as_list=1)
                 return serials
+
+        def set_mandatory_field(self):
+                mandatory_fields = []
+                serial_no = (self.series).split(',')
+                for serial in serial_no:
+                        sn_details = frappe.db.get_value('Serial No', serial, '*', as_dict=1)
+                        if sn_details.qc_grade:
+                                self.prepare_for_mandatory('Chemical', sn_details.qc_grade, mandatory_fields)
+                        if sn_details.psd_grade:
+                                self.prepare_for_mandatory('PSD', sn_details.psd_grade, mandatory_fields)
+                        if sn_details.sa_grade:
+                                self.prepare_for_mandatory('SSA', sn_details.sa_grade, mandatory_fields)
+                self.update_parm(mandatory_fields)
+
+        def prepare_for_mandatory(self, type_of_analysis, grade, mandatory_fields):
+                type_of_field = ('a.has_chemical_analysis' if type_of_analysis == 'Chemical' else 'a.has_psd_analysis') if type_of_analysis in ['Chemical', 'PSD'] else 'a.has_ssa_analysis'
+                type_of_table =  ('Chemical Analysis Specifications' if type_of_analysis == 'Chemical' else 'PSD Analysis Specifications') if type_of_analysis in ['Chemical', 'PSD'] else 'SSA Analysis Specifications'    
+                get_parm = frappe.db.sql(""" select b.specification from `tab%s` b, `tabGrade` a
+                                where %s = 'Yes' and b.mandatory = 'Yes' 
+                                and b.parent = a.name order by b.idx"""%(type_of_table, type_of_field), as_dict=1)
+                for parm in get_parm:
+                        mandatory_fields.append(parm.specification)
+
+        def update_parm(self, mandatory_fields):
+                parm = sorted(set(mandatory_fields), key=mandatory_fields.index)
+                self.mandatory_fields = ','.join(parm).lower().replace(' ', '_')
 
         def append_to_child(self,serial):
                 qc_details=frappe.get_doc('Serial No',serial).quality_parameters
@@ -84,6 +116,7 @@ class QualityAnalysis(Document):
                 qa.mesh_625=value.mesh_625
                 qa.o2=value.o2
                 qa.ssa=value.ssa
+                qa.grade = frappe.db.get_value('Serial No',{"name":serial},'grade') 
                 qa.qty=frappe.db.get_value('Serial No',{"name":serial},'qty')
                 if self.total_qty:
                         self.total_qty += qa.qty or 0
@@ -100,16 +133,41 @@ class QualityAnalysis(Document):
                         if d.serial_no == serial:
                                 frappe.throw("Serial Already in list")
 
+        def before_submit(self):
+                drum_list = ''
+                for data in self.qa_serial:
+                        if data.serial_no:
+                                self.update_serial_status(data.serial_no, 'Completed')
+                                drum_list += data.serial_no + '\n'
+                self.drum_list = drum_list
+
+        def before_cancel(self):
+                self.update_status()
+
+        def update_status(self):
+                self.drum_list = ''
+                for data in self.qa_serial:
+                        self.update_serial_status(data.serial_no, 'Completed')
+                                
+
+        def update_serial_status(self, serial_no, status):
+                frappe.db.sql(""" update `tabSerial No` set qc_certificate ='%s'
+                        where name = '%s'"""%(status, serial_no))
+
+
 def get_source_from(doctype,txt,searchfield,start,page_len,filters):
-	return frappe.db.sql("select name,qty,status from `tabSerial No` where item_code='%s' and qc_status!=''"%(filters.get('item_code'))) 
-			
+        condition = get_condition(filters.get('item_code'))
+	return frappe.db.sql("""select name,qty,status from `tabSerial No` where item_code='%s' 
+                and ifnull(qty,0) > 0 and %s and ifnull(qc_certificate, 'Not Completed') = 'Not Completed'
+                and name like '%%%s%%' limit %s, %s"""%(filters.get('item_code'), condition, txt, start, page_len))
 
-
-
-
-
-
-
-	
+def get_condition(item_code):
+        condition = '1=1'
+        if item_code:
+                item_details = frappe.db.get_value('Item', item_code, '*', as_dict=1)
+                if item_details.chemical_analysis == 'Yes': condition += " and qc_status = 'Accepted'"
+                if item_details.psd_analysis == 'Yes' : condition += " and psd_status = 'Accepted'"
+                if item_details.ssa == 'Yes' : condition += " and sa_analysis = 'Accepted'"
+        return condition
 
 

@@ -52,6 +52,14 @@ def get_data():
 				{
 					"type":"report",
 					"is_query_report":True,
+					"name": "Drum or Bag Details",
+					"doctype": "Serial No",
+					"description": _("Drum's or Bag's all information"),
+					"icon": "icon-bar-chart"
+				},
+				{
+					"type":"report",
+					"is_query_report":True,
 					"name": "Flowbin Details",
 					"doctype": "Stock Entry",
 					"icon": "icon-bar-chart"

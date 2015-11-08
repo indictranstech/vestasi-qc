@@ -23,10 +23,33 @@ class PSDAnalysis(Document):
 			if cint(re.findall('\\d+', d.serial_from)[0]) > cint(re.findall('\\d+', d.serial_to)[0]):
 				frappe.msgprint("From Serial No must be less than To Serial No",raise_exception=1)
 
-	def qc_result(self,serial_no):
-		parameters=self.get_parameteres()
-		result=self.get_result(parameters,serial_no)
-		return "Done"
+	def qc_result(self,args):
+		# parameters=self.get_parameteres()
+		# result=self.get_result(parameters,serial_no)
+		# return "Done"
+		grade = self.get_psd_grade(args)
+		args['grade'] = grade
+		return {'grade': grade, 'result': 'Rejected' if grade == 'R' else 'Accepted' }
+
+	def get_psd_grade(self, args):
+		grade = 'R'
+		mapper = {'D10' : args.get('d10'), 'D30': args.get('d30'), 'D50' : args.get('d50'), 'D90': args.get('d90'),'D100': args.get('d100'), '635 MESH': args.get('mesh_625')}
+		parents = frappe.db.sql(""" select parent from `tabPSD Analysis Specifications` a
+			where a.specification = 'D50' and a.min_value <= %s and %s <= a.max_value """%(args.get('d50'), args.get('d50')), as_list=1)
+		if parents:
+			for parent in parents:
+				grade = parent[0]
+				specifications = frappe.db.sql(""" select specification, min_value, max_value from `tabPSD Analysis Specifications`
+					where parent = '%s' and specification != 'D50' and mandatory ='Yes' """%(parent[0]), as_dict = 1)
+				for data in specifications:
+					if flt(data.min_value) > flt(mapper[data.specification]) and flt(mapper[data.specification]) > flt(data.max_value):
+						grade = 'R'
+						break
+					elif flt(data.min_value) <= flt(mapper[data.specification]) and flt(mapper[data.specification]) <= flt(data.max_value):
+						grade = parent[0]
+				if grade!='R':
+					break
+		return grade
 	
 	def get_parameteres(self):
 		if self.item_code:
@@ -124,23 +147,29 @@ class PSDAnalysis(Document):
 
 	def set_values_in_serial_qc(self,serial,data):
 		sn=frappe.get_doc("Serial No",serial)
-		cl=sn.get('quality_parameters')
-		temp=0
-		if cl:
-			for d in cl:
-				if temp==0:
-					d.d10=data.d10
-					d.d50=data.d50
-					d.d90=data.d90
-					d.mesh_625=data.mesh_625
-					sn.save(ignore_permissions=True)
+		if len(sn.quality_parameters)>0:
+			for d in sn.quality_parameters:
+				self.update_ex_qty(d, data)
 		else:
-			qp=sn.append("quality_parameters",{})
-			qp.d10=data.d10
-			qp.d50=data.d50
-			qp.d90=data.d90
-			qp.mesh_625=data.mesh_625
-			sn.save(ignore_permissions=True)
+			qp = sn.append('quality_parameters', {})
+			self.add_new(data, qp)
+		sn.save(ignore_permissions=True)
+
+	def update_ex_qty(self, d, data):
+		d.d10=data.d10
+		d.d30 = data.d30
+		d.d50=data.d50
+		d.d90=data.d90
+		d.d100 = data.d100
+		d.mesh_625=data.mesh_625
+	
+	def add_new(self, data, qp):
+		qp.d10=data.d10
+		qp.d30 = data.d30
+		qp.d50=data.d50
+		qp.d90=data.d90
+		qp.d100 = data.d100
+		qp.mesh_625=data.mesh_625
 
 	def change_qcstatus_on_cancel(self):
 		for data in self.get('psd_serial'):
@@ -155,7 +184,7 @@ class PSDAnalysis(Document):
 				to_do=frappe.db.sql("""update `tabToDo` 
 					set status='Open' 
 					where serial_no='%s'"""%(serial[0]))
-				frappe.db.sql("""delete from 
-					`tabQuality Paramter Values` 
+				frappe.db.sql("""update
+					`tabQuality Paramter Values` set d10 = 0 , d30 = 0, d50=0, d90=0, d100 = 0, mesh_625=0 
 					where parent='%s'"""%(serial[0]))
 				

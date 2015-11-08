@@ -19,8 +19,12 @@ cur_frm.fields_dict["serial_to"].get_query = function(doc) {
 }
 
 cur_frm.cscript.get_details=function(doc,cdt,cdn){
-        var d=locals[cdt][cdn]       
-        get_server_fields('get_details','','',doc,cdt,cdn,1,function(r){
+        var d=locals[cdt][cdn]  
+        if (doc.serial_from && doc.serial_to){
+        	get_server_fields('get_details','','',doc,cdt,cdn,1,function(r){
                 refresh_field('qa_serial')
-        })
+        	})
+        }else{
+        	alert("Select Serial From and Serial To")
+        }     
 }

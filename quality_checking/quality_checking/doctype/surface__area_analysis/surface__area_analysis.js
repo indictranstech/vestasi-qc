@@ -12,9 +12,9 @@ cur_frm.fields_dict.sa_serial.grid.get_field("serial_no").get_query = function(d
 }
 cur_frm.cscript.calculate=function(doc,cdt,cdn){
         var d=locals[cdt][cdn]       
-        get_server_fields('qc_result',d.serial_no,'',doc,cdt,cdn,1,function(r){
-     
-                refresh_field('sa_serial')
+        get_server_fields('qc_result',d,'',doc,cdt,cdn,1,function(r){
+     		refresh_field('grade', d.name, 'sa_serial')
+     		refresh_field('result', d.name, 'sa_serial')
         })
 }
 

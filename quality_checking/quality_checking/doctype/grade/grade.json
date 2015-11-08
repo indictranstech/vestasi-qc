@@ -26,6 +26,75 @@
    "reqd": 0, 
    "search_index": 0, 
    "set_only_once": 0
+  }, 
+  {
+   "fieldname": "applicable_for", 
+   "fieldtype": "Select", 
+   "label": "Applicable For", 
+   "options": "Siconide\nSicomill", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "quality_checking_specifications", 
+   "fieldtype": "Section Break", 
+   "label": "Quality Checking Specifications", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "default": "No", 
+   "fieldname": "has_chemical_analysis", 
+   "fieldtype": "Select", 
+   "label": "Has Chemical Analysis", 
+   "options": "Yes\nNo", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "depends_on": "eval:doc.has_chemical_analysis == 'Yes'", 
+   "fieldname": "chemical_analysis_specifications", 
+   "fieldtype": "Table", 
+   "label": "Chemical Analysis Specifications", 
+   "options": "Chemical Analysis Specifications", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "default": "No", 
+   "fieldname": "has_psd_analysis", 
+   "fieldtype": "Select", 
+   "label": "Has PSD Analysis", 
+   "options": "Yes\nNo", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "depends_on": "eval:doc.has_psd_analysis == 'Yes'", 
+   "fieldname": "psd_analysis_specifications", 
+   "fieldtype": "Table", 
+   "label": "PSD Analysis Specifications", 
+   "options": "PSD Analysis Specifications", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "default": "No", 
+   "fieldname": "has_ssa_analysis", 
+   "fieldtype": "Select", 
+   "label": "Has SSA Analysis", 
+   "options": "Yes\nNo", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "depends_on": "eval:doc.has_ssa_analysis == 'Yes'", 
+   "fieldname": "ssa_analysis_specifications", 
+   "fieldtype": "Table", 
+   "label": "SSA Analysis Specifications", 
+   "options": "SSA Analysis Specifications", 
+   "permlevel": 0, 
+   "precision": ""
   }
  ], 
  "hide_heading": 0, 
@@ -36,7 +105,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-11-03 14:21:58.476056", 
+ "modified": "2015-11-06 14:19:17.913905", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Grade", 

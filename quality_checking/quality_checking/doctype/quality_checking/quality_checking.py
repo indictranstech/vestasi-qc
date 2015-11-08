@@ -23,10 +23,34 @@ class QualityChecking(Document):
                     	if cint(re.findall('\\d+', d.serial_from)[0]) > cint(re.findall('\\d+', d.serial_to)[0]):
                         	frappe.msgprint("From Serial No must be less than To Serial No",raise_exception=1)
 
-	def qc_result(self,serial_no):
-        	parameters=self.get_parameteres()
-      		result=self.get_result(parameters,serial_no)
-       		return "Done"
+	def qc_result(self,args):
+		# parameters=self.get_parameteres()
+		# result=self.get_result(parameters,serial_no)
+		# return "Done"
+		grade = self.get_checmical_grade(args)
+		args['grade'] = grade
+		return {'grade': grade, 'result': 'Rejected' if grade == 'R' else 'Accepted' }
+
+	def get_checmical_grade(self, args):
+		grade = 'R'
+		mapper = {'Fe' : args.get('fe'), 'Ca' : args.get('ca'), 'Al': args.get('al'), 'C': args.get('c'), 'O2' : args.get('o2'), 'Alpha': args.get('alpha'), 'Free Si': args.get('free_si')}
+		parents = frappe.db.sql(""" select parent from `tabChemical Analysis Specifications` a
+			where a.specification = 'Fe' and a.min_value <= '%s' and '%s' <= a.max_value """%(args.get('fe'), args.get('fe')), as_list=1, debug=1)
+		if parents:
+			for parent in parents:
+				specifications = frappe.db.sql(""" select specification, min_value, max_value from `tabChemical Analysis Specifications`
+					where parent = '%s' and specification != 'Fe' and mandatory ='Yes' """%(parent[0]), as_dict = 1)
+				for data in specifications:
+					frappe.errprint([data.specification, data.min_value, data.max_value, parent[0], mapper[data.specification]])
+					if flt(data.min_value) < flt(mapper[data.specification]) and flt(mapper[data.specification]) > flt(data.max_value):
+						grade = 'R'
+						break
+					elif flt(data.min_value) <= flt(mapper[data.specification]) and flt(mapper[data.specification]) <= flt(data.max_value):
+						grade = parent[0]
+						# break
+				if grade!='R':
+					break
+		return grade
 	
 	def get_parameteres(self):
 		if self.item_code:
@@ -127,33 +151,6 @@ class QualityChecking(Document):
 			set qc_status='%s',qc_grade='%s'
 			where name='%s'"""%(data.result,data.grade,serial[0]))
 
-
-	def set_values_in_serial_qc(self,serial,data):
-			sn=frappe.get_doc("Serial No",serial)
-			cl=sn.get('quality_parameters')
-			temp=0
-			if cl:
-				for d in cl:
-					if temp==0:
-						d.fe=data.fe
-						d.ca=data.ca
-						d.al=data.al
-						d.c=data.c
-						d.alpha=data.alpha
-						d.o2=data.o2
-						d.free_si=data.free_si
-						sn.save(ignore_permissions=True)
-			else:
-				qp=sn.append("quality_parameters",{})
-				qp.fe=data.fe
-				qp.ca=data.ca
-				qp.al=data.al
-				qp.c=data.c
-				qp.alpha=data.alpha
-				qp.o2=data.o2
-				qp.free_si=data.free_si
-				sn.save(ignore_permissions=True)
-
 	def change_qcstatus_on_cancel(self):
 		for data in self.get('qc_serial'):
 			serials=frappe.db.sql("""select name from `tabSerial No` where status='Available' and item_code = '%s' and name between '%s' and '%s' """%(self.item_code, data.serial_from,data.serial_to),as_list=1)
@@ -161,6 +158,33 @@ class QualityChecking(Document):
 				serial_numbers=frappe.db.sql("""update `tabSerial No` set qc_status='',qc_grade='' where name='%s'"""%(serial[0]))
 				update_serialNo_grade(serial[0])
 				to_do=frappe.db.sql("""update `tabToDo` set status='Open' where serial_no='%s'"""%(serial[0]))
-				frappe.db.sql("""delete from `tabQuality Paramter Values` where parent='%s'"""%(serial[0]))
-				
- 
+				frappe.db.sql(""" update `tabQuality Paramter Values` set 
+				fe=0,ca=0,c=0, al=0, alpha = 0, o2=0, free_si=0 where parent='%s'"""%(serial[0]))
+
+	def set_values_in_serial_qc(self,serial,data):
+			sn=frappe.get_doc("Serial No",serial)
+			if len(sn.quality_parameters)>0:
+				for d in sn.quality_parameters:
+					self.update_ex_qty(d, data)
+			else:
+				qp = sn.append('quality_parameters', {})
+				self.add_new(data, qp)
+			sn.save(ignore_permissions=True)
+	
+ 	def update_ex_qty(self,d, data):
+ 		d.fe=data.fe
+		d.ca=data.ca
+		d.al=data.al
+		d.c=data.c
+		d.alpha=data.alpha
+		d.o2=data.o2
+		d.free_si=data.free_si
+
+	def add_new(self, data, qp):
+		qp.fe=data.fe
+		qp.ca=data.ca
+		qp.al=data.al
+		qp.c=data.c
+		qp.alpha=data.alpha
+		qp.o2=data.o2
+		qp.free_si=data.free_si

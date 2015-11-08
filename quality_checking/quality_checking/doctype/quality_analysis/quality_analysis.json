@@ -261,8 +261,16 @@
   {
    "fieldname": "series", 
    "fieldtype": "Data", 
-   "hidden": 1, 
+   "hidden": 0, 
    "label": "Series", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
+  }, 
+  {
+   "fieldname": "serial_list", 
+   "fieldtype": "Small Text", 
+   "label": "Serial List", 
    "permlevel": 0, 
    "precision": "", 
    "read_only": 1
@@ -282,6 +290,16 @@
    "label": "Remarks", 
    "permlevel": 0, 
    "precision": ""
+  }, 
+  {
+   "fieldname": "drum_list", 
+   "fieldtype": "Text", 
+   "hidden": 1, 
+   "label": "Drum List", 
+   "no_copy": 1, 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
   }
  ], 
  "hide_heading": 0, 
@@ -292,7 +310,7 @@
  "is_submittable": 1, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-10-28 14:52:50.302540", 
+ "modified": "2015-11-08 18:04:55.133663", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "Quality Analysis", 
@@ -313,6 +331,24 @@
    "read": 1, 
    "report": 1, 
    "role": "All", 
+   "set_user_permissions": 0, 
+   "submit": 1, 
+   "write": 1
+  }, 
+  {
+   "amend": 1, 
+   "apply_user_permissions": 0, 
+   "cancel": 0, 
+   "create": 1, 
+   "delete": 1, 
+   "email": 0, 
+   "export": 0, 
+   "import": 0, 
+   "permlevel": 0, 
+   "print": 1, 
+   "read": 1, 
+   "report": 1, 
+   "role": "Chemical Analyst", 
    "set_user_permissions": 0, 
    "submit": 1, 
    "write": 1

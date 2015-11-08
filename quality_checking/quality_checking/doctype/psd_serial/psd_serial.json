@@ -95,7 +95,7 @@
    "ignore_user_permissions": 0, 
    "in_filter": 0, 
    "in_list_view": 1, 
-   "label": "d10", 
+   "label": "D10", 
    "no_copy": 0, 
    "permlevel": 0, 
    "precision": "", 
@@ -107,6 +107,13 @@
    "set_only_once": 0
   }, 
   {
+   "fieldname": "d30", 
+   "fieldtype": "Float", 
+   "label": "D30", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
    "allow_on_submit": 0, 
    "fieldname": "d50", 
    "fieldtype": "Float", 
@@ -114,7 +121,7 @@
    "ignore_user_permissions": 0, 
    "in_filter": 0, 
    "in_list_view": 0, 
-   "label": "d50", 
+   "label": "D50", 
    "no_copy": 0, 
    "permlevel": 0, 
    "precision": "", 
@@ -133,7 +140,7 @@
    "ignore_user_permissions": 0, 
    "in_filter": 0, 
    "in_list_view": 0, 
-   "label": "d90", 
+   "label": "D90", 
    "no_copy": 0, 
    "permlevel": 0, 
    "precision": "", 
@@ -145,6 +152,13 @@
    "set_only_once": 0
   }, 
   {
+   "fieldname": "d100", 
+   "fieldtype": "Float", 
+   "label": "D100", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
    "allow_on_submit": 0, 
    "fieldname": "mesh_625", 
    "fieldtype": "Float", 
@@ -152,7 +166,7 @@
    "ignore_user_permissions": 0, 
    "in_filter": 0, 
    "in_list_view": 0, 
-   "label": "Mesh 625", 
+   "label": "635 MESH", 
    "no_copy": 0, 
    "permlevel": 0, 
    "precision": "", 
@@ -230,7 +244,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2014-11-24 15:44:23.947255", 
+ "modified": "2015-11-05 13:21:50.072596", 
  "modified_by": "Administrator", 
  "module": "Quality Checking", 
  "name": "PSD Serial", 
