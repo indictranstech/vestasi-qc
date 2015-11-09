@@ -25,6 +25,7 @@ def get_condition(filters):
 	if filters.get('grade') : condition += " and a.grade like '%%%s%%'"%(filters.get('grade'))
 	if filters.get('drum_from') : condition += " and a.name >= '%s'"%(filters.get('drum_from'))
 	if filters.get('drum_to') : condition += " and a.name <= '%s'"%(filters.get('drum_to'))
+	if filters.get('warehouse') : condition += " and a.serial_no_warehouse = '%s'"%(filters.get('warehouse'))
 
 	return condition
 

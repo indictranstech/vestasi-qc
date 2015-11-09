@@ -26,5 +26,12 @@ frappe.query_reports["Drum or Bag Details"] = {
 			"label": __("Grade"),
 			"fieldtype": "Data"
 		},
+		{
+			"fieldname":"warehouse",
+			"label": __("Location"),
+			"fieldtype": "Link",
+			"options" : "Warehouse"
+		},
 	]
 }
+ouse
