@@ -34,8 +34,8 @@ def get_columns():
 		"Drum or Bag:Link/Serial No:100", "Item Code:Link/Item:120", "Qty:Float:70", 
 		"Grade::60", "Location:Link/Warehouse:120", "Fe:Float:40",
 		"Ca:Float:40", "Al:Float:40", "C:Float:40", 
-		"Alpha:Float:40", "O2:Float:40", "Free Si:Float:40", "D10:Float:40", "d30:Float:40",
-		"D10:Float:40", "d30:Float:40",
+		"Alpha:Float:40", "O2:Float:40", "Free Si:Float:40", "D10:Float:40", "D30:Float:40",
+		"D50:Float:40", "D90:Float:40",
 		"D100:Float:40", "MESH 635:Float:40","SSA:Float:40", "Remark::50"
 	]
 	return columns
